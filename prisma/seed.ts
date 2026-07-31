@@ -1,6 +1,22 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaLibSQL } from "@prisma/adapter-libsql";
+import { createClient } from "@libsql/client";
 
-const prisma = new PrismaClient();
+function createPrismaClient() {
+  const url = process.env.DATABASE_URL || "file:./dev.db";
+
+  if (url.startsWith("libsql://") || url.startsWith("https://")) {
+    const libsql = createClient({
+      url,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
+    return new PrismaClient({ adapter: new PrismaLibSQL(libsql) });
+  }
+
+  return new PrismaClient();
+}
+
+const prisma = createPrismaClient();
 
 async function main() {
   await prisma.user.upsert({
