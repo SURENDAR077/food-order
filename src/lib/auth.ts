@@ -2,9 +2,11 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "./prisma";
+import { getEnv } from "./env";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  secret: getEnv("NEXTAUTH_SECRET"),
   session: { strategy: "jwt" },
   pages: { signIn: "/" },
   providers: [
