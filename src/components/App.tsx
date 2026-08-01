@@ -16,7 +16,7 @@ type MenuItem = { id: string; name: string; slug: string; price: number; descrip
 type CartItem = { id: string; menuItemId: string; name: string; price: number; quantity: number; notes: string };
 type Address = { id: string; label: string; streetAddress: string; city: string; state: string; zipCode: string; phone: string };
 type OrderItem = { id: string; name: string; price: number; quantity: number };
-type Order = { id: string; status: string; subtotal: number; tax: number; deliveryFee: number; total: number; paymentMethod: string; createdAt: string; notes: string; items: OrderItem[]; user?: { name: string; email: string } };
+type Order = { id: string; status: string; subtotal: number; tax: number; deliveryFee: number; total: number; paymentMethod: string; createdAt: string; notes: string; items: OrderItem[]; user?: { name: string; email: string; phone?: string } };
 type Analytics = { totalOrders: number; totalRevenue: number; pendingOrders: number; totalCustomers: number };
 type Page = "home" | "menu" | "auth" | "cart" | "checkout" | "orders" | "order-detail" | "account" | "admin";
 
@@ -489,13 +489,31 @@ function AdminPage() {
       </div>}
       {tab === "orders" && <div className="space-y-3">
         {orders.length === 0 && <p className="text-gray-500 text-center py-8">No orders found.</p>}
-        {orders.map(o => <div key={o.id} className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div><p className="font-semibold text-gray-900">Order #{o.id.slice(0, 8)}</p>{o.user && <p className="text-xs text-gray-500">{o.user.name} ({o.user.email})</p>}<p className="text-xs text-gray-500 mt-1">{o.items.length} items &middot; {fmt(o.total)} &middot; {new Date(o.createdAt).toLocaleString()}</p></div>
-          <div className="flex items-center gap-2">
-            <span className={cn("inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium", sc(o.status))}>{sl(o.status)}</span>
-            <select value={o.status} onChange={e => updStatus(o.id, e.target.value)} className="text-xs border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-orange-500 focus:outline-none">
-              {["pending", "confirmed", "preparing", "out_for_delivery", "delivered", "cancelled"].map(s => <option key={s} value={s}>{sl(s)}</option>)}
-            </select>
+        {orders.map(o => <div key={o.id} className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div>
+              <p className="font-semibold text-gray-900">Order #{o.id.slice(0, 8)}</p>
+              <p className="text-xs text-gray-500">{o.user?.name || "Customer"}{o.user?.phone ? ` · ${o.user.phone}` : ""}</p>
+              <p className="text-xs text-gray-500 mt-1">{new Date(o.createdAt).toLocaleString()}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={cn("inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium", sc(o.status))}>{sl(o.status)}</span>
+              <select value={o.status} onChange={e => updStatus(o.id, e.target.value)} className="text-xs border border-gray-300 rounded-lg px-2 py-1 focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                {["pending", "confirmed", "preparing", "out_for_delivery", "delivered", "cancelled"].map(s => <option key={s} value={s}>{sl(s)}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="divide-y border-t">
+            {o.items.map(i => (
+              <div key={i.id} className="flex justify-between py-2">
+                <span className="text-sm font-medium text-gray-900">{i.name} <span className="text-gray-500 font-normal">x{i.quantity}</span></span>
+                <span className="text-sm font-medium">{fmt(i.price * i.quantity)}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between items-center pt-3 text-sm border-t mt-2">
+            <span className="text-gray-500">{o.items.length} item{o.items.length !== 1 ? "s" : ""} · {o.paymentMethod}</span>
+            <span className="font-bold text-gray-900">{fmt(o.total)}</span>
           </div>
         </div>)}
       </div>}
